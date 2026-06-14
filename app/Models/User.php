@@ -29,6 +29,8 @@ class User extends Authenticatable
         'phone',
         'bio',
         'profile_image',
+        'company_name',
+        'company_location',
     ];
 
     /**
@@ -49,4 +51,9 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    public function favoriteCourts()
+    {
+        return $this->belongsToMany(Court::class, 'favorite_courts')->withTimestamps();
+    }
 }

@@ -19,11 +19,13 @@ class Booking extends Model
         'total_price',
         'booking_code',
         'status',
+        'review_reminder_sent_at',
     ];
 
     protected $casts = [
         'booking_date' => 'date',
         'total_price'  => 'decimal:2',
+        'review_reminder_sent_at' => 'datetime',
     ];
 
     public function court()

@@ -23,10 +23,12 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
-            'role' => 'sometimes|in:admin,owner,user',
+            'name'             => 'required|string|max:255',
+            'email'            => 'required|string|email|max:255|unique:users',
+            'password'         => 'required|string|min:8',
+            'role'             => 'sometimes|in:admin,owner,user',
+            'company_name'     => 'nullable|string|max:255',
+            'company_location' => 'nullable|string|max:500',
         ]);
 
         if ($validator->fails()) {
@@ -34,10 +36,12 @@ class AuthController extends Controller
         }
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => $request->role ?? User::ROLE_USER,
+            'name'             => $request->name,
+            'email'            => $request->email,
+            'password'         => Hash::make($request->password),
+            'role'             => $request->role ?? User::ROLE_USER,
+            'company_name'     => $request->company_name,
+            'company_location' => $request->company_location,
         ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;

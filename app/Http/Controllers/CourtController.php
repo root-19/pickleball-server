@@ -15,6 +15,14 @@ class CourtController extends Controller
         if ($court->court_image) {
             $data['court_image'] = url('storage/' . $court->court_image);
         }
+        if ($court->relationLoaded('owner') && $court->owner) {
+            $data['owner_name']             = $court->owner->name;
+            $data['owner_company']          = $court->owner->company_name;
+            $data['owner_company_location'] = $court->owner->company_location;
+            $data['owner_profile_image']    = $court->owner->profile_image
+                ? url('storage/' . $court->owner->profile_image)
+                : null;
+        }
         return $data;
     }
 
@@ -49,9 +57,13 @@ class CourtController extends Controller
             'court_image'    => 'nullable|image|mimes:jpeg,png,jpg|max:3072',
             'latitude'       => 'nullable|numeric|between:-90,90',
             'longitude'      => 'nullable|numeric|between:-180,180',
+            'court_type'     => 'nullable|in:regular,open_play',
             'amenities'      => 'nullable|array',
             'amenities.*'    => 'string',
             'about'          => 'nullable|string|max:1000',
+            'court_quality'  => 'nullable|in:standard,pro',
+            'has_tent'       => 'nullable|boolean',
+            'venue_type'     => 'nullable|in:outdoor,indoor',
         ]);
 
         if ($validator->fails()) {
@@ -69,16 +81,20 @@ class CourtController extends Controller
         $amenities = $request->has('amenities') ? $request->amenities : [];
 
         $court = Court::create([
-            'user_id'        => $request->user()->id,
-            'name'           => $request->name,
-            'location'       => $request->location,
-            'price_per_hour' => $request->price_per_hour,
-            'time_slots'     => $request->time_slots,
-            'court_image'    => $imagePath,
-            'latitude'       => $request->latitude,
-            'longitude'      => $request->longitude,
-            'amenities'      => $amenities,
-            'about'          => $request->about,
+            'user_id'         => $request->user()->id,
+            'name'            => $request->name,
+            'court_type'      => $request->court_type ?? 'regular',
+            'location'        => $request->location,
+            'price_per_hour'  => $request->price_per_hour,
+            'time_slots'      => $request->time_slots,
+            'court_image'     => $imagePath,
+            'latitude'        => $request->latitude,
+            'longitude'       => $request->longitude,
+            'amenities'       => $amenities,
+            'about'           => $request->about,
+            'court_quality'   => $request->court_quality,
+            'has_tent'        => $request->has_tent ?? false,
+            'venue_type'      => $request->venue_type,
         ]);
 
         return response()->json($this->formatCourt($court), 201);
@@ -104,9 +120,13 @@ class CourtController extends Controller
             'is_active'      => 'sometimes|boolean',
             'close_reason'   => 'nullable|string|max:500',
             'court_image'    => 'nullable|image|mimes:jpeg,png,jpg|max:3072',
+            'court_type'     => 'nullable|in:regular,open_play',
             'amenities'      => 'nullable|array',
             'amenities.*'    => 'string',
             'about'          => 'nullable|string|max:1000',
+            'court_quality'  => 'nullable|in:standard,pro',
+            'has_tent'       => 'nullable|boolean',
+            'venue_type'     => 'nullable|in:outdoor,indoor',
         ]);
 
         if ($validator->fails()) {
@@ -123,7 +143,7 @@ class CourtController extends Controller
             $court->court_image = $filename;
         }
 
-        $court->update($request->only(['name', 'location', 'price_per_hour', 'time_slots', 'is_active', 'close_reason', 'amenities', 'about']));
+        $court->update($request->only(['name', 'court_type', 'location', 'price_per_hour', 'time_slots', 'is_active', 'close_reason', 'amenities', 'about', 'court_quality', 'has_tent', 'venue_type']));
 
         return response()->json($this->formatCourt($court));
     }

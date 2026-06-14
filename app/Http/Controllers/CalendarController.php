@@ -37,13 +37,20 @@ class CalendarController extends Controller
                 'court_name' => $court->name,
                 'bookings'   => $courtBookings->map(function ($booking) {
                     return [
-                        'id'          => $booking->id,
-                        'date'        => $booking->booking_date->toDateString(),
-                        'start_time'  => $booking->time_slot_start,
-                        'end_time'    => $booking->time_slot_end,
-                        'status'      => $booking->status,
-                        'player_name' => $booking->user->name ?? 'Unknown',
-                        'total_price' => $booking->total_price,
+                        'id'           => $booking->id,
+                        'date'         => $booking->booking_date->toDateString(),
+                        'start_time'   => $booking->time_slot_start,
+                        'end_time'     => $booking->time_slot_end,
+                        'status'       => $booking->status,
+                        'player_id'    => $booking->user->id ?? null,
+                        'player_name'  => $booking->user->name ?? 'Unknown',
+                        'player_email' => $booking->user->email ?? null,
+                        'player_phone' => $booking->user->phone ?? null,
+                        'player_image' => $booking->user->profile_image
+                            ? url('storage/' . $booking->user->profile_image)
+                            : null,
+                        'total_price'  => $booking->total_price,
+                        'booking_code' => $booking->booking_code,
                     ];
                 }),
             ];

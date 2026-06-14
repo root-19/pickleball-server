@@ -12,6 +12,7 @@ class Court extends Model
     protected $fillable = [
         'user_id',
         'name',
+        'court_type',
         'location',
         'price_per_hour',
         'court_image',
@@ -22,6 +23,9 @@ class Court extends Model
         'longitude',
         'amenities',
         'about',
+        'court_quality',
+        'has_tent',
+        'venue_type',
     ];
 
     protected $casts = [
@@ -31,6 +35,7 @@ class Court extends Model
         'latitude' => 'decimal:7',
         'longitude' => 'decimal:7',
         'amenities' => 'array',
+        'has_tent' => 'boolean',
     ];
 
     public function owner()

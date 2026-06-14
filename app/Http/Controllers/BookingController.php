@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\Court;
+use App\Services\NotificationService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -100,6 +101,9 @@ class BookingController extends Controller
             'booking_code'    => $bookingCode,
             'status'          => 'confirmed',
         ]);
+
+        $booking->load('court');
+        app(NotificationService::class)->notifyBookingConfirmed($booking);
 
         return response()->json([
             'booking' => $booking,
@@ -242,7 +246,8 @@ class BookingController extends Controller
                     'status'          => $b->status,
                     'booking_code'    => $b->booking_code,
                     'player_name'     => $b->user->name ?? 'Unknown',
-                    'player_image'    => $b->user->profile_image ?? null,
+                    'player_image'    => $b->user->profile_image
+                        ? url('storage/' . $b->user->profile_image) : null,
                     'court_name'      => $b->court->name ?? '',
                 ];
             });
