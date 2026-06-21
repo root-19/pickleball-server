@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\BookingReview;
 use App\Models\Notification;
+use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -43,6 +44,9 @@ class ReviewController extends Controller
             'comment' => $validated['comment'] ?? null,
             'result' => $validated['result'],
         ]);
+
+        $booking->load('court');
+        app(NotificationService::class)->notifyOwnerReviewAdded($booking, $validated['rating']);
 
         if (!empty($validated['notification_id'])) {
             $notification = Notification::where('user_id', $request->user()->id)

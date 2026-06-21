@@ -23,12 +23,20 @@ class CourtController extends Controller
                 ? url('storage/' . $court->owner->profile_image)
                 : null;
         }
+
+        // Calculate real-time rating data
+        $reviews = $court->reviews;
+        $reviewCount = $reviews->count();
+        $averageRating = $reviewCount > 0 ? $reviews->avg('rating') : 0;
+        $data['average_rating'] = round($averageRating, 1);
+        $data['review_count'] = $reviewCount;
+
         return $data;
     }
 
     public function browse(Request $request)
     {
-        $courts = Court::with('owner')
+        $courts = Court::with('owner', 'reviews')
             ->get()
             ->map(fn($court) => $this->formatCourt($court));
 
@@ -64,6 +72,7 @@ class CourtController extends Controller
             'court_quality'  => 'nullable|in:standard,pro',
             'has_tent'       => 'nullable|boolean',
             'venue_type'     => 'nullable|in:outdoor,indoor',
+            'parking_slots'  => 'nullable|integer|min:0|max:9999',
         ]);
 
         if ($validator->fails()) {
@@ -95,6 +104,7 @@ class CourtController extends Controller
             'court_quality'   => $request->court_quality,
             'has_tent'        => $request->has_tent ?? false,
             'venue_type'      => $request->venue_type,
+            'parking_slots'   => $request->parking_slots,
         ]);
 
         return response()->json($this->formatCourt($court), 201);
@@ -127,6 +137,7 @@ class CourtController extends Controller
             'court_quality'  => 'nullable|in:standard,pro',
             'has_tent'       => 'nullable|boolean',
             'venue_type'     => 'nullable|in:outdoor,indoor',
+            'parking_slots'  => 'nullable|integer|min:0|max:9999',
         ]);
 
         if ($validator->fails()) {
@@ -143,7 +154,7 @@ class CourtController extends Controller
             $court->court_image = $filename;
         }
 
-        $court->update($request->only(['name', 'court_type', 'location', 'price_per_hour', 'time_slots', 'is_active', 'close_reason', 'amenities', 'about', 'court_quality', 'has_tent', 'venue_type']));
+        $court->update($request->only(['name', 'court_type', 'location', 'price_per_hour', 'time_slots', 'is_active', 'close_reason', 'amenities', 'about', 'court_quality', 'has_tent', 'venue_type', 'parking_slots']));
 
         return response()->json($this->formatCourt($court));
     }

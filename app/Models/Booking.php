@@ -19,6 +19,10 @@ class Booking extends Model
         'total_price',
         'booking_code',
         'status',
+        'payment_method',
+        'payment_status',
+        'paymongo_source_id',
+        'paymongo_payment_id',
         'review_reminder_sent_at',
     ];
 

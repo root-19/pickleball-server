@@ -52,6 +52,11 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
+    public function courts()
+    {
+        return $this->hasMany(Court::class);
+    }
+
     public function favoriteCourts()
     {
         return $this->belongsToMany(Court::class, 'favorite_courts')->withTimestamps();

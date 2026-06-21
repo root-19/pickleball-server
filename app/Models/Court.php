@@ -26,6 +26,7 @@ class Court extends Model
         'court_quality',
         'has_tent',
         'venue_type',
+        'parking_slots',
     ];
 
     protected $casts = [
@@ -36,10 +37,21 @@ class Court extends Model
         'longitude' => 'decimal:7',
         'amenities' => 'array',
         'has_tent' => 'boolean',
+        'parking_slots' => 'integer',
     ];
 
     public function owner()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function bookings()
+    {
+        return $this->hasMany(\App\Models\Booking::class);
+    }
+
+    public function reviews()
+    {
+        return $this->hasManyThrough(\App\Models\BookingReview::class, \App\Models\Booking::class);
     }
 }

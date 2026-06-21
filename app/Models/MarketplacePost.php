@@ -16,6 +16,9 @@ class MarketplacePost extends Model
         'price',
         'link',
         'image',
+        'video',
+        'views',
+        'hearts',
         'is_active',
     ];
 
@@ -27,5 +30,10 @@ class MarketplacePost extends Model
     public function owner()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function views()
+    {
+        return $this->belongsToMany(User::class, 'marketplace_post_views', 'post_id', 'user_id')->withTimestamps();
     }
 }

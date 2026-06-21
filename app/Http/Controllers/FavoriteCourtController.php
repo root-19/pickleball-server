@@ -9,8 +9,19 @@ class FavoriteCourtController extends Controller
 {
     public function index(Request $request)
     {
-        $courts = $request->user()->favoriteCourts()->get();
-        return response()->json($courts);
+        $courts = $request->user()->favoriteCourts()->with('reviews')->get();
+
+        // Add rating data to each court
+        $courtsWithRatings = $courts->map(function ($court) {
+            $reviews = $court->reviews;
+            $reviewCount = $reviews->count();
+            $averageRating = $reviewCount > 0 ? $reviews->avg('rating') : 0;
+            $court->average_rating = round($averageRating, 1);
+            $court->review_count = $reviewCount;
+            return $court;
+        });
+
+        return response()->json($courtsWithRatings);
     }
 
     public function store(Request $request, $courtId)

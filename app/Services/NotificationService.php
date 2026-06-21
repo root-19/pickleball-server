@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Booking;
 use App\Models\Notification;
+use App\Models\OwnerNotification;
 use App\Models\OpenPlayQueue;
 use Carbon\Carbon;
 
@@ -145,5 +146,57 @@ class NotificationService
         $min = str_pad($parts[1] ?? '00', 2, '0', STR_PAD_LEFT);
 
         return "{$h}:{$min}:00";
+    }
+
+    public function createOwnerNotification(int $userId, string $type, string $title, string $body, ?array $data = null): OwnerNotification
+    {
+        return OwnerNotification::create([
+            'user_id' => $userId,
+            'type' => $type,
+            'title' => $title,
+            'body' => $body,
+            'data' => $data,
+        ]);
+    }
+
+    public function notifyOwnerBookingConfirmed(Booking $booking): OwnerNotification
+    {
+        $courtName = $booking->court->name ?? 'Court';
+        $ownerId = $booking->court->user_id;
+
+        return $this->createOwnerNotification(
+            $ownerId,
+            'booking',
+            'New Booking Received',
+            "{$booking->user->name} booked {$courtName} on {$booking->booking_date} ({$booking->time_slot_start} – {$booking->time_slot_end}).",
+            [
+                'booking_id' => $booking->id,
+                'booking_code' => $booking->booking_code,
+                'court_id' => $booking->court_id,
+                'court_name' => $courtName,
+                'player_name' => $booking->user->name,
+                'total_price' => $booking->total_price,
+            ]
+        );
+    }
+
+    public function notifyOwnerReviewAdded(Booking $booking, int $rating): OwnerNotification
+    {
+        $courtName = $booking->court->name ?? 'Court';
+        $ownerId = $booking->court->user_id;
+
+        return $this->createOwnerNotification(
+            $ownerId,
+            'review',
+            'New Review Received',
+            "{$booking->user->name} left a {$rating}-star review for {$courtName}.",
+            [
+                'booking_id' => $booking->id,
+                'court_id' => $booking->court_id,
+                'court_name' => $courtName,
+                'player_name' => $booking->user->name,
+                'rating' => $rating,
+            ]
+        );
     }
 }

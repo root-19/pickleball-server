@@ -12,15 +12,25 @@ use Illuminate\Support\Str;
 
 class BookingController extends Controller
 {
+    const PLATFORM_FEE = 0.10;
+
     public function getCourtBookedSlots(Request $request, $courtId)
     {
         $date = $request->query('date', now()->toDateString());
 
-        $bookedSlots = Booking::where('court_id', $courtId)
+        $bookings = Booking::where('court_id', $courtId)
             ->where('booking_date', $date)
             ->where('status', '!=', 'cancelled')
-            ->pluck('time_slot_start')
-            ->toArray();
+            ->where('payment_status', 'paid')
+            ->get(['time_slot_start', 'time_slot_end']);
+
+        // Return full booking ranges for conflict detection
+        $bookedSlots = $bookings->map(function ($booking) {
+            return [
+                'start' => $booking->time_slot_start,
+                'end' => $booking->time_slot_end,
+            ];
+        })->toArray();
 
         return response()->json(['booked_slots' => $bookedSlots]);
     }
@@ -44,45 +54,78 @@ class BookingController extends Controller
             return response()->json(['message' => 'This court is currently closed.'], 422);
         }
 
-        $validSlot = collect($court->time_slots)->first(fn($slot) =>
-            $slot['start'] === $request->time_slot_start &&
-            $slot['end']   === $request->time_slot_end
-        );
+        // Validate against court's opening/closing hours
+        $courtOpenTime = $court->time_slots[0]['start'] ?? null;
+        $courtCloseTime = $court->time_slots[0]['end'] ?? null;
 
-        if (!$validSlot) {
-            return response()->json(['message' => 'Invalid time slot for this court.'], 422);
+        if ($courtOpenTime && $courtCloseTime) {
+            try {
+                $requestedStart = Carbon::createFromFormat('g:i A', $request->time_slot_start);
+                $requestedEnd = Carbon::createFromFormat('g:i A', $request->time_slot_end);
+                $openTime = Carbon::createFromFormat('g:i A', $courtOpenTime);
+                $closeTime = Carbon::createFromFormat('g:i A', $courtCloseTime);
+
+                if ($requestedStart->lt($openTime) || $requestedEnd->gt($closeTime)) {
+                    return response()->json([
+                        'error_code' => 'outside_hours',
+                        'message' => "Booking time must be within court operating hours ({$courtOpenTime} - {$courtCloseTime}).",
+                    ], 422);
+                }
+            } catch (\Exception $e) {
+                // If time parsing fails, skip validation
+            }
         }
 
-        $slotTaken = Booking::where('court_id', $request->court_id)
-            ->where('booking_date', $request->booking_date)
-            ->where('time_slot_start', $request->time_slot_start)
-            ->where('status', '!=', 'cancelled')
-            ->exists();
+        // Check for overlapping bookings (conflict detection)
+        $requestedStart = Carbon::createFromFormat('g:i A', $request->time_slot_start);
+        $requestedEnd = Carbon::createFromFormat('g:i A', $request->time_slot_end);
 
-        if ($slotTaken) {
+        $overlappingBooking = Booking::where('court_id', $request->court_id)
+            ->where('booking_date', $request->booking_date)
+            ->where('status', '!=', 'cancelled')
+            ->where(function ($query) use ($requestedStart, $requestedEnd) {
+                $query->where(function ($q) use ($requestedStart, $requestedEnd) {
+                    // New booking starts during an existing booking
+                    $q->where('time_slot_start', '<=', $requestedStart->format('g:i A'))
+                      ->where('time_slot_end', '>', $requestedStart->format('g:i A'));
+                })->orWhere(function ($q) use ($requestedStart, $requestedEnd) {
+                    // New booking ends during an existing booking
+                    $q->where('time_slot_start', '<', $requestedEnd->format('g:i A'))
+                      ->where('time_slot_end', '>=', $requestedEnd->format('g:i A'));
+                })->orWhere(function ($q) use ($requestedStart, $requestedEnd) {
+                    // New booking completely covers an existing booking
+                    $q->where('time_slot_start', '>=', $requestedStart->format('g:i A'))
+                      ->where('time_slot_end', '<=', $requestedEnd->format('g:i A'));
+                });
+            })
+            ->first();
+
+        if ($overlappingBooking) {
             return response()->json([
-                'error_code'   => 'slot_taken',
-                'message'      => 'This time slot is already booked. Please choose another.',
+                'error_code' => 'slot_taken',
+                'message' => 'This time slot is already booked. Please choose another.',
             ], 409);
         }
 
+        // Check user conflict
         $userConflict = Booking::where('user_id', $request->user()->id)
             ->where('booking_date', $request->booking_date)
-            ->where('time_slot_start', $request->time_slot_start)
             ->where('status', '!=', 'cancelled')
+            ->where(function ($query) use ($requestedStart, $requestedEnd) {
+                $query->where('time_slot_start', '<', $requestedEnd->format('g:i A'))
+                      ->where('time_slot_end', '>', $requestedStart->format('g:i A'));
+            })
             ->exists();
 
         if ($userConflict) {
             return response()->json([
                 'error_code' => 'user_conflict',
-                'message'    => 'You already have a booking during this time slot.',
+                'message' => 'You already have a booking during this time.',
             ], 409);
         }
 
         try {
-            $start         = Carbon::createFromFormat('g:i A', $request->time_slot_start);
-            $end           = Carbon::createFromFormat('g:i A', $request->time_slot_end);
-            $durationHours = (int) $start->diffInHours($end);
+            $durationHours = (int) $requestedStart->diffInHours($requestedEnd);
         } catch (\Exception $e) {
             $durationHours = 1;
         }
@@ -132,6 +175,9 @@ class BookingController extends Controller
             ->get();
 
         // Daily breakdown
+        $fee   = self::PLATFORM_FEE;
+        $net   = fn($amount) => round((float) $amount * (1 - $fee), 2);
+
         $daily = [];
         $days  = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
         for ($i = 0; $i < 7; $i++) {
@@ -140,19 +186,19 @@ class BookingController extends Controller
             $daily[] = [
                 'date'     => $d->toDateString(),
                 'day'      => $days[$i],
-                'revenue'  => (float) $dayB->sum('total_price'),
+                'revenue'  => $net($dayB->sum('total_price')),
                 'bookings' => $dayB->count(),
                 'hours'    => (float) $dayB->sum('duration_hours'),
             ];
         }
 
         // Top courts
-        $topCourts = $bookings->groupBy('court_id')->map(function ($group) {
+        $topCourts = $bookings->groupBy('court_id')->map(function ($group) use ($net) {
             $court = $group->first()->court;
             return [
                 'court_id'   => $court->id,
                 'court_name' => $court->name,
-                'revenue'    => (float) $group->sum('total_price'),
+                'revenue'    => $net($group->sum('total_price')),
                 'bookings'   => $group->count(),
                 'hours'      => (float) $group->sum('duration_hours'),
             ];
@@ -167,14 +213,15 @@ class BookingController extends Controller
             ->sum('total_price');
 
         return response()->json([
-            'week_start'       => $weekStart->toDateString(),
-            'week_end'         => $weekEnd->toDateString(),
-            'total_revenue'    => (float) $bookings->sum('total_price'),
-            'total_bookings'   => $bookings->count(),
-            'total_hours'      => (float) $bookings->sum('duration_hours'),
-            'prev_week_revenue'=> (float) $prevRevenue,
-            'daily'            => $daily,
-            'top_courts'       => $topCourts,
+            'week_start'        => $weekStart->toDateString(),
+            'week_end'          => $weekEnd->toDateString(),
+            'total_revenue'     => $net($bookings->sum('total_price')),
+            'total_bookings'    => $bookings->count(),
+            'total_hours'       => (float) $bookings->sum('duration_hours'),
+            'prev_week_revenue' => $net($prevRevenue),
+            'platform_fee_pct'  => self::PLATFORM_FEE * 100,
+            'daily'             => $daily,
+            'top_courts'        => $topCourts,
         ]);
     }
 
@@ -194,7 +241,9 @@ class BookingController extends Controller
             $query->where('booking_date', $date);
         }
 
-        $bookings = $query->get()->map(function ($b) {
+        $fee      = self::PLATFORM_FEE;
+        $bookings = $query->get()->map(function ($b) use ($fee) {
+            $gross = (float) $b->total_price;
             return [
                 'id'              => $b->id,
                 'booking_code'    => $b->booking_code,
@@ -202,7 +251,9 @@ class BookingController extends Controller
                 'time_slot_start' => $b->time_slot_start,
                 'time_slot_end'   => $b->time_slot_end,
                 'duration_hours'  => $b->duration_hours,
-                'total_price'     => $b->total_price,
+                'total_price'     => $gross,
+                'net_earnings'    => round($gross * (1 - $fee), 2),
+                'platform_fee'    => round($gross * $fee, 2),
                 'status'          => $b->status,
                 'player_name'     => $b->user->name ?? 'Unknown',
                 'player_image'    => $b->user->profile_image ?? null,
@@ -252,12 +303,15 @@ class BookingController extends Controller
                 ];
             });
 
+        $net = fn($amount) => round((float) $amount * (1 - self::PLATFORM_FEE), 2);
+
         return response()->json([
-            'today_bookings'  => $todayBookings->count(),
-            'today_revenue'   => $todayBookings->sum('total_price'),
-            'today_hours'     => $todayBookings->sum('duration_hours'),
-            'unique_players'  => $todayBookings->pluck('user_id')->unique()->count(),
-            'upcoming'        => $upcoming,
+            'today_bookings'   => $todayBookings->count(),
+            'today_revenue'    => $net($todayBookings->sum('total_price')),
+            'today_hours'      => $todayBookings->sum('duration_hours'),
+            'unique_players'   => $todayBookings->pluck('user_id')->unique()->count(),
+            'platform_fee_pct' => self::PLATFORM_FEE * 100,
+            'upcoming'         => $upcoming,
         ]);
     }
 
