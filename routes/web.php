@@ -24,4 +24,6 @@ Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
     Route::post('/owners/{id}/payout',             [AdminController::class, 'storePayout'])->name('payouts.store');
     Route::get('/payouts',                         [AdminController::class, 'payouts'])->name('payouts');
     Route::post('/payouts/{id}/status',            [AdminController::class, 'updatePayoutStatus'])->name('payouts.status');
+    Route::get('/messages',                        [AdminController::class, 'messages'])->name('messages');
+    Route::post('/messages/{id}/reply',            [AdminController::class, 'replyMessage'])->name('messages.reply');
 });

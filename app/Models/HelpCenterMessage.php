@@ -9,6 +9,8 @@ class HelpCenterMessage extends Model
 {
     use HasFactory;
 
+    protected $table = 'help_center_messages';
+
     protected $fillable = [
         'user_id',
         'admin_id',

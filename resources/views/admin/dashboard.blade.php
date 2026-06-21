@@ -43,6 +43,43 @@
     </div>
 </div>
 
+{{-- Unread Messages Notification --}}
+@if($unreadMessages && $unreadMessages->count() > 0)
+<div class="card mb-6" style="border: 1px solid rgba(239, 68, 68, 0.4);">
+    <div class="flex items-center gap-2 mb-4">
+        <span class="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center text-red-400"><i class="fas fa-envelope text-sm"></i></span>
+        <span class="text-slate-400 text-sm font-semibold">Users with Unread Messages</span>
+        <span class="bg-red-500 text-white text-xs px-2 py-1 rounded-full">{{ $unreadMessages->count() }}</span>
+    </div>
+    <div class="space-y-2 max-h-64 overflow-y-auto">
+        @foreach($unreadMessages as $userId => $messages)
+            @php
+                $latestMessage = $messages->first();
+                $user = $latestMessage->user;
+                $messageCount = $messages->count();
+            @endphp
+            <div class="flex items-center justify-between p-3 rounded-lg bg-slate-800/50">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 font-bold">
+                        {{ strtoupper(substr($user->name ?? 'U', 0, 1)) }}
+                    </div>
+                    <div>
+                        <div class="text-white font-medium">{{ $user->name ?? 'Unknown User' }}</div>
+                        <div class="text-slate-500 text-xs">{{ $user->email ?? '' }}</div>
+                        <div class="text-slate-400 text-xs mt-1">
+                            {{ $messageCount }} unreplied message{{ $messageCount > 1 ? 's' : '' }}
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="bg-red-500/20 text-red-400 text-xs px-2 py-1 rounded">{{ $messageCount }}</span>
+                </div>
+            </div>
+        @endforeach
+    </div>
+</div>
+@endif
+
 {{-- Revenue Breakdown --}}
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
     <div class="stat-card" style="border:1px solid rgba(76,175,80,0.4)">

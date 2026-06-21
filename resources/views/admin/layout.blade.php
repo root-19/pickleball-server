@@ -38,6 +38,9 @@
             <a href="{{ route('admin.payouts') }}" class="nav-link {{ request()->routeIs('admin.payouts*') ? 'active' : '' }}">
                 <i class="fas fa-money-bill-transfer w-4"></i> Payouts
             </a>
+            <a href="{{ route('admin.messages') }}" class="nav-link {{ request()->routeIs('admin.messages*') ? 'active' : '' }}">
+                <i class="fas fa-envelope w-4"></i> Messages
+            </a>
         </nav>
         <div class="mt-auto px-3">
             <form method="POST" action="{{ route('admin.logout') }}">

@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Court;
+use App\Models\HelpCenterMessage;
+use App\Models\Message;
 use App\Models\Payout;
 use App\Models\PayoutAccount;
 use App\Models\User;
@@ -112,10 +114,18 @@ class AdminController extends Controller
             ];
         });
 
+        // Unread help center messages - get unique users with messages
+        $unreadMessages = HelpCenterMessage::with(['user:id,name,email'])
+            ->whereNull('admin_id') // Messages not yet replied to by admin
+            ->latest()
+            ->limit(50)
+            ->get()
+            ->groupBy('user_id');
+
         return view('admin.dashboard', compact(
             'totalUsers', 'totalOwners', 'totalCourts', 'totalBookings',
             'grossRevenue', 'platformEarnings', 'ownerPayouts',
-            'last30', 'monthly', 'newUsersChart'
+            'last30', 'monthly', 'newUsersChart', 'unreadMessages'
         ));
     }
 
@@ -340,5 +350,46 @@ class AdminController extends Controller
         ]);
 
         return back()->with('success', 'Payout status updated to ' . ucfirst($request->status) . '.');
+    }
+
+    // ── Messages ─────────────────────────────────────────────────────────
+
+    public function messages(Request $request)
+    {
+        $search = $request->query('search');
+        $query = HelpCenterMessage::with(['user:id,name,email', 'admin:id,name'])
+            ->latest();
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('message', 'like', "%{$search}%")
+                  ->orWhereHas('user', fn($q2) => $q2->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        $messages = $query->paginate(50)->withQueryString();
+
+        return view('admin.messages', compact('messages', 'search'));
+    }
+
+    public function replyMessage(Request $request, $id)
+    {
+        $request->validate([
+            'reply' => 'required|string|max:1000',
+        ]);
+
+        $message = HelpCenterMessage::findOrFail($id);
+
+        // Create a new message as the admin's reply
+        HelpCenterMessage::create([
+            'user_id' => $message->user_id,
+            'admin_id' => Auth::id(),
+            'message' => $request->reply,
+        ]);
+
+        // Mark the original message as replied
+        $message->update(['admin_id' => Auth::id()]);
+
+        return back()->with('success', 'Reply sent successfully.');
     }
 }
