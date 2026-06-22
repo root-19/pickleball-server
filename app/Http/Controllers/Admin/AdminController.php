@@ -356,20 +356,36 @@ class AdminController extends Controller
 
     public function messages(Request $request)
     {
-        $search = $request->query('search');
-        $query = HelpCenterMessage::with(['user:id,name,email', 'admin:id,name'])
-            ->latest();
+        $search    = $request->query('search');
+        $userId    = $request->query('user');
+
+        // All users who have sent messages, grouped with latest message + unread count
+        $usersQuery = User::whereHas('helpCenterMessages')
+            ->with(['helpCenterMessages' => function ($q) {
+                $q->latest()->limit(1);
+            }]);
 
         if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('message', 'like', "%{$search}%")
-                  ->orWhereHas('user', fn($q2) => $q2->where('name', 'like', "%{$search}%"));
+            $usersQuery->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
-        $messages = $query->paginate(50)->withQueryString();
+        $users = $usersQuery->get()->map(function ($u) {
+            $u->latest_message  = $u->helpCenterMessages->first();
+            $u->unreplied_count = HelpCenterMessage::where('user_id', $u->id)
+                ->whereNull('admin_id')->count();
+            return $u;
+        })->sortByDesc(fn($u) => optional($u->latest_message)->created_at);
 
-        return view('admin.messages', compact('messages', 'search'));
+        // Selected user thread
+        $selectedUser   = $userId ? User::find($userId) : null;
+        $thread         = $selectedUser
+            ? HelpCenterMessage::where('user_id', $selectedUser->id)->oldest()->get()
+            : collect();
+
+        return view('admin.messages', compact('users', 'selectedUser', 'thread', 'search'));
     }
 
     public function replyMessage(Request $request, $id)
@@ -382,14 +398,31 @@ class AdminController extends Controller
 
         // Create a new message as the admin's reply
         HelpCenterMessage::create([
-            'user_id' => $message->user_id,
+            'user_id'  => $message->user_id,
             'admin_id' => Auth::id(),
-            'message' => $request->reply,
+            'message'  => $request->reply,
         ]);
 
         // Mark the original message as replied
         $message->update(['admin_id' => Auth::id()]);
 
-        return back()->with('success', 'Reply sent successfully.');
+        return redirect()->route('admin.messages', ['user' => $message->user_id])
+            ->with('success', 'Reply sent.');
+    }
+
+    public function replyToUser(Request $request, $userId)
+    {
+        $request->validate(['reply' => 'required|string|max:1000']);
+
+        User::findOrFail($userId);
+
+        HelpCenterMessage::create([
+            'user_id'  => $userId,
+            'admin_id' => Auth::id(),
+            'message'  => $request->reply,
+        ]);
+
+        return redirect()->route('admin.messages', ['user' => $userId])
+            ->with('success', 'Reply sent.');
     }
 }

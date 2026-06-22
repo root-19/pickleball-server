@@ -26,4 +26,5 @@ Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
     Route::post('/payouts/{id}/status',            [AdminController::class, 'updatePayoutStatus'])->name('payouts.status');
     Route::get('/messages',                        [AdminController::class, 'messages'])->name('messages');
     Route::post('/messages/{id}/reply',            [AdminController::class, 'replyMessage'])->name('messages.reply');
+    Route::post('/messages/user/{userId}/reply',   [AdminController::class, 'replyToUser'])->name('messages.reply.user');
 });

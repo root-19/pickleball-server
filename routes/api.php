@@ -16,6 +16,8 @@ use App\Http\Controllers\OpenPlayQueueController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\LeaderboardController;
+use App\Http\Controllers\EventQueueController;
+use App\Http\Controllers\PickleEventController;
 use App\Http\Controllers\StaffController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -38,6 +40,8 @@ Route::post('/forgot-password/reset', [AuthController::class, 'resetPassword']);
 
 Route::get('/payments/callback/success', [PaymentController::class, 'callbackSuccess']);
 Route::get('/payments/callback/failed',  [PaymentController::class, 'callbackFailed']);
+
+Route::get('/pickle-events/browse', [PickleEventController::class, 'browse']);
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
@@ -100,6 +104,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/reviews/booking/{bookingId}', [ReviewController::class, 'show']);
 
     Route::get('/leaderboard', [LeaderboardController::class, 'index']);
+
+    Route::apiResource('/pickle-events', PickleEventController::class);
+
+    Route::post('/event-queue/join',           [EventQueueController::class, 'join']);
+    Route::get('/event-queue/status',          [EventQueueController::class, 'status']);
+    Route::post('/event-queue/cancel',         [EventQueueController::class, 'cancel']);
+    Route::get('/event-queue/{eventId}/players', [EventQueueController::class, 'players']);
+    Route::post('/event-queue/create-source',  [EventQueueController::class, 'createSource']);
+    Route::post('/event-queue/verify-source',  [EventQueueController::class, 'verifySource']);
+    Route::post('/event-queue/create-qrph',    [EventQueueController::class, 'createQrPh']);
+    Route::post('/event-queue/verify-intent',  [EventQueueController::class, 'verifyIntent']);
 
     Route::get('/payout-accounts',                [PayoutAccountController::class, 'index']);
     Route::post('/payout-accounts',               [PayoutAccountController::class, 'store']);

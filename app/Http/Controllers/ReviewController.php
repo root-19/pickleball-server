@@ -24,7 +24,11 @@ class ReviewController extends Controller
 
         $booking = Booking::where('id', $validated['booking_id'])
             ->where('user_id', $request->user()->id)
-            ->firstOrFail();
+            ->first();
+
+        if (!$booking) {
+            return response()->json(['message' => 'Booking not found.'], 404);
+        }
 
         $existing = BookingReview::where('booking_id', $booking->id)
             ->where('user_id', $request->user()->id)
@@ -61,7 +65,11 @@ class ReviewController extends Controller
     {
         $booking = Booking::where('id', $bookingId)
             ->where('user_id', $request->user()->id)
-            ->firstOrFail();
+            ->first();
+
+        if (!$booking) {
+            return response()->json(['review' => null]);
+        }
 
         $review = BookingReview::where('booking_id', $booking->id)
             ->where('user_id', $request->user()->id)
