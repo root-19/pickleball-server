@@ -9,7 +9,7 @@
 .msg-sidebar-search input { width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 8px 12px; color: #e2e8f0; font-size: 13px; outline: none; }
 .msg-sidebar-search input:focus { border-color: #4CAF50; }
 .msg-user-list { flex: 1; overflow-y: auto; }
-.msg-user-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; cursor: pointer; transition: background .15s; border-bottom: 1px solid #1e293b; }
+.msg-user-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; cursor: pointer; transition: background .15s; border-bottom: 1px solid #1e293b; text-decoration: none; }
 .msg-user-item:hover { background: #0f172a; }
 .msg-user-item.active { background: #0f172a; border-left: 3px solid #4CAF50; }
 .msg-avatar { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; flex-shrink: 0; }
@@ -33,6 +33,16 @@
 .msg-send-btn { background: #4CAF50; border: none; color: #fff; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s; flex-shrink: 0; }
 .msg-send-btn:hover { background: #43a047; }
 .msg-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #475569; }
+.msg-back-btn { display: none; padding: 8px; color: #94a3b8; margin-right: 4px; }
+.msg-back-btn:hover { color: #fff; }
+@media (max-width: 768px) {
+    .msg-layout { flex-direction: column; height: calc(100vh - 100px); }
+    .msg-sidebar { width: 100%; border-right: none; border-bottom: 1px solid #334155; }
+    .msg-sidebar.msg-hidden { display: none; }
+    .msg-main.msg-hidden { display: none; }
+    .msg-back-btn { display: inline-flex; }
+    .msg-bubble { max-width: 80%; }
+}
 </style>
 
 <div class="mb-4">
@@ -43,7 +53,7 @@
 <div class="msg-layout">
 
     {{-- Left: User list --}}
-    <div class="msg-sidebar">
+    <div class="msg-sidebar {{ $selectedUser ? 'msg-hidden' : '' }}">
         <div class="msg-sidebar-header">
             <div class="msg-sidebar-search">
                 <form method="GET" action="{{ route('admin.messages') }}">
@@ -75,10 +85,13 @@
     </div>
 
     {{-- Right: Conversation --}}
-    <div class="msg-main">
+    <div class="msg-main {{ !$selectedUser ? 'msg-hidden' : '' }}">
         @if($selectedUser)
             {{-- Header --}}
             <div class="msg-main-header">
+                <a href="{{ route('admin.messages', ['search' => $search]) }}" class="msg-back-btn">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
                 <div class="msg-avatar bg-blue-500/20 text-blue-400" style="width:38px;height:38px;font-size:15px;">
                     {{ strtoupper(substr($selectedUser->name, 0, 1)) }}
                 </div>

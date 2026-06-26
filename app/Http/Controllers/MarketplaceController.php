@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\MarketplacePost;
+use App\Models\MarketplaceComment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -23,6 +24,7 @@ class MarketplaceController extends Controller
             ? url('storage/' . $post->owner->profile_image)
             : null;
         $data['views'] = $post->views()->count();
+        $data['comment_count'] = $post->comments()->count();
         return $data;
     }
 
@@ -168,6 +170,67 @@ class MarketplaceController extends Controller
         $post->update($request->only(['title', 'description', 'price', 'link']));
         $post->load('owner');
         return response()->json($this->formatPost($post));
+    }
+
+    public function getComments($id)
+    {
+        $post = MarketplacePost::findOrFail($id);
+        $comments = $post->comments()
+            ->with('user')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($c) {
+                return [
+                    'id' => $c->id,
+                    'comment' => $c->comment,
+                    'created_at' => $c->created_at,
+                    'user_name' => $c->user->name ?? 'Unknown',
+                    'user_image' => $c->user->profile_image
+                        ? url('storage/' . $c->user->profile_image)
+                        : null,
+                ];
+            });
+
+        return response()->json($comments);
+    }
+
+    public function addComment(Request $request, $id)
+    {
+        $post = MarketplacePost::findOrFail($id);
+        $validator = Validator::make($request->all(), [
+            'comment' => 'required|string|max:1000',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $comment = MarketplaceComment::create([
+            'post_id' => $post->id,
+            'user_id' => $request->user()->id,
+            'comment' => $request->comment,
+        ]);
+
+        $comment->load('user');
+
+        return response()->json([
+            'id' => $comment->id,
+            'comment' => $comment->comment,
+            'created_at' => $comment->created_at,
+            'user_name' => $comment->user->name ?? 'Unknown',
+            'user_image' => $comment->user->profile_image
+                ? url('storage/' . $comment->user->profile_image)
+                : null,
+        ], 201);
+    }
+
+    public function deleteComment(Request $request, $commentId)
+    {
+        $comment = MarketplaceComment::where('id', $commentId)
+            ->where('user_id', $request->user()->id)
+            ->firstOrFail();
+        $comment->delete();
+        return response()->json(['message' => 'Comment deleted']);
     }
 
     public function destroy(Request $request, $id)

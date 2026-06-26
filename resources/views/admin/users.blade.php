@@ -2,14 +2,14 @@
 @section('title', 'Users')
 @section('content')
 
-<div class="flex items-center justify-between mb-6">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
     <div>
         <h1 class="text-2xl font-bold text-white">Users</h1>
         <p class="text-slate-400 text-sm mt-1">{{ $users->total() }} registered players</p>
     </div>
-    <form method="GET" action="{{ route('admin.users') }}" class="flex gap-2">
+    <form method="GET" action="{{ route('admin.users') }}" class="flex flex-wrap gap-2">
         <input type="text" name="search" value="{{ $search }}" placeholder="Search name or email…"
-            class="px-4 py-2 rounded-xl bg-slate-700 text-white border border-slate-600 focus:border-green-500 focus:outline-none text-sm w-64">
+            class="px-4 py-2 rounded-xl bg-slate-700 text-white border border-slate-600 focus:border-green-500 focus:outline-none text-sm w-full sm:w-64">
         <button type="submit" class="px-4 py-2 rounded-xl bg-green-500 hover:bg-green-600 text-white text-sm font-semibold">Search</button>
         @if($search)
             <a href="{{ route('admin.users') }}" class="px-4 py-2 rounded-xl bg-slate-600 hover:bg-slate-500 text-white text-sm">Clear</a>
@@ -18,7 +18,8 @@
 </div>
 
 <div class="card overflow-hidden p-0">
-    <table class="w-full text-sm">
+    <div class="table-responsive">
+    <table class="w-full text-sm min-w-[600px]">
         <thead>
             <tr class="border-b border-slate-700">
                 <th class="text-left px-6 py-4 text-slate-400 font-semibold">User</th>
@@ -59,6 +60,7 @@
             @endforelse
         </tbody>
     </table>
+    </div>
     <div class="px-6 py-4 border-t border-slate-700">
         {{ $users->links() }}
     </div>

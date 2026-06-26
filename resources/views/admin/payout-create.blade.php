@@ -19,7 +19,7 @@
 </div>
 
 {{-- Earnings Summary --}}
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
     <div class="stat-card">
         <div class="text-slate-400 text-xs mb-1">Total Gross Revenue</div>
         <div class="text-2xl font-black text-white">₱{{ number_format($gross, 2) }}</div>

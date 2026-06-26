@@ -36,4 +36,9 @@ class MarketplacePost extends Model
     {
         return $this->belongsToMany(User::class, 'marketplace_post_views', 'post_id', 'user_id')->withTimestamps();
     }
+
+    public function comments()
+    {
+        return $this->hasMany(MarketplaceComment::class, 'post_id');
+    }
 }

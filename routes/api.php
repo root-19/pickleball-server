@@ -83,6 +83,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/marketplace', [MarketplaceController::class, 'store']);
     Route::post('/marketplace/{id}/view', [MarketplaceController::class, 'incrementView']);
     Route::post('/marketplace/{id}/heart', [MarketplaceController::class, 'toggleHeart']);
+    Route::get('/marketplace/{id}/comments', [MarketplaceController::class, 'getComments']);
+    Route::post('/marketplace/{id}/comments', [MarketplaceController::class, 'addComment']);
+    Route::delete('/marketplace/comments/{commentId}', [MarketplaceController::class, 'deleteComment']);
     Route::post('/marketplace/{id}', [MarketplaceController::class, 'update']);
     Route::delete('/marketplace/{id}', [MarketplaceController::class, 'destroy']);
 

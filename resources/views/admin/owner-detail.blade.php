@@ -6,7 +6,7 @@
     <a href="{{ route('admin.owners') }}" class="text-slate-400 hover:text-white text-sm"><i class="fas fa-arrow-left mr-1"></i> Back to Owners</a>
 </div>
 
-<div class="flex items-center justify-between mb-8">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
     <div class="flex items-center gap-5">
         @if($owner->profile_image)
             <img src="{{ url('storage/'.$owner->profile_image) }}" class="w-16 h-16 rounded-2xl object-cover">
@@ -30,7 +30,7 @@
 </div>
 
 {{-- Summary Stats --}}
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
     <div class="stat-card">
         <div class="text-slate-400 text-xs mb-1">Courts</div>
         <div class="text-2xl font-black text-white">{{ $courts->count() }}</div>
@@ -60,7 +60,8 @@
     <div class="px-6 py-4 border-b border-slate-700">
         <h2 class="font-bold text-white">Courts ({{ $courts->count() }})</h2>
     </div>
-    <table class="w-full text-sm">
+    <div class="table-responsive">
+    <table class="w-full text-sm min-w-[500px]">
         <thead>
             <tr class="border-b border-slate-700">
                 <th class="text-left px-6 py-3 text-slate-400 font-semibold">Court Name</th>
@@ -84,6 +85,7 @@
             @endforeach
         </tbody>
     </table>
+    </div>
 </div>
 
 {{-- Bookings --}}
@@ -91,7 +93,8 @@
     <div class="px-6 py-4 border-b border-slate-700">
         <h2 class="font-bold text-white">All Bookings ({{ $bookings->count() }})</h2>
     </div>
-    <table class="w-full text-sm">
+    <div class="table-responsive">
+    <table class="w-full text-sm min-w-[600px]">
         <thead>
             <tr class="border-b border-slate-700">
                 <th class="text-left px-6 py-3 text-slate-400 font-semibold">Code</th>
@@ -121,6 +124,7 @@
             @endforelse
         </tbody>
     </table>
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>

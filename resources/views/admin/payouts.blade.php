@@ -8,7 +8,7 @@
 </div>
 
 {{-- Summary Cards --}}
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
     <div class="stat-card" style="border:1px solid rgba(96,165,250,0.4)">
         <div class="flex items-center gap-2 mb-2">
             <span class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400"><i class="fas fa-wallet text-sm"></i></span>
@@ -36,7 +36,7 @@
 </div>
 
 {{-- Tabs --}}
-<div class="flex gap-1 mb-6 bg-slate-800 rounded-xl p-1 w-fit">
+<div class="flex flex-wrap gap-1 mb-6 bg-slate-800 rounded-xl p-1 w-full sm:w-fit">
     <a href="{{ route('admin.payouts', ['tab' => 'owners', 'search' => $search]) }}"
        class="px-5 py-2 rounded-lg text-sm font-semibold transition {{ $tab === 'owners' ? 'bg-green-500 text-white' : 'text-slate-400 hover:text-white' }}">
         <i class="fas fa-store mr-1"></i> Owners with Earnings
@@ -48,10 +48,10 @@
 </div>
 
 {{-- Search --}}
-<form method="GET" action="{{ route('admin.payouts') }}" class="flex gap-3 mb-4">
+<form method="GET" action="{{ route('admin.payouts') }}" class="flex flex-wrap gap-3 mb-4">
     <input type="hidden" name="tab" value="{{ $tab }}">
     <input type="text" name="search" value="{{ $search }}" placeholder="Search owner name or email…"
-        class="px-4 py-2 rounded-xl bg-slate-700 text-white border border-slate-600 focus:border-green-500 focus:outline-none text-sm w-72">
+        class="px-4 py-2 rounded-xl bg-slate-700 text-white border border-slate-600 focus:border-green-500 focus:outline-none text-sm w-full sm:w-72">
     <button type="submit" class="px-4 py-2 rounded-xl bg-slate-600 hover:bg-slate-500 text-white text-sm font-semibold">Search</button>
     @if($search)
         <a href="{{ route('admin.payouts', ['tab' => $tab]) }}" class="px-4 py-2 rounded-xl bg-slate-700 text-slate-400 hover:text-white text-sm">Clear</a>
@@ -61,7 +61,8 @@
 {{-- TAB: Owners with Earnings --}}
 @if($tab === 'owners')
 <div class="card overflow-hidden p-0">
-    <table class="w-full text-sm">
+    <div class="table-responsive">
+    <table class="w-full text-sm min-w-[900px]">
         <thead>
             <tr class="border-b border-slate-700">
                 <th class="text-left px-6 py-4 text-slate-400 font-semibold">Owner</th>
@@ -142,13 +143,15 @@
             @endforelse
         </tbody>
     </table>
+    </div>
 </div>
 @endif
 
 {{-- TAB: Payout History --}}
 @if($tab === 'history')
 <div class="card overflow-hidden p-0">
-    <table class="w-full text-sm">
+    <div class="table-responsive">
+    <table class="w-full text-sm min-w-[800px]">
         <thead>
             <tr class="border-b border-slate-700">
                 <th class="text-left px-6 py-4 text-slate-400 font-semibold">Reference</th>
@@ -225,6 +228,7 @@
             @endforelse
         </tbody>
     </table>
+    </div>
     <div class="px-6 py-4 border-t border-slate-700">
         {{ $history->links() }}
     </div>

@@ -20,7 +20,7 @@
     </div>
 </div>
 
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
     <div class="stat-card">
         <div class="text-slate-400 text-xs mb-1">Total Bookings</div>
         <div class="text-2xl font-black text-white">{{ $bookings->count() }}</div>
@@ -43,7 +43,8 @@
     <div class="px-6 py-4 border-b border-slate-700">
         <h2 class="font-bold text-white">Booking History</h2>
     </div>
-    <table class="w-full text-sm">
+    <div class="table-responsive">
+    <table class="w-full text-sm min-w-[600px]">
         <thead>
             <tr class="border-b border-slate-700">
                 <th class="text-left px-6 py-3 text-slate-400 font-semibold">Code</th>
@@ -73,5 +74,6 @@
             @endforelse
         </tbody>
     </table>
+    </div>
 </div>
 @endsection
