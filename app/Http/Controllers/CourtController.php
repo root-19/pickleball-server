@@ -82,9 +82,9 @@ class CourtController extends Controller
         $imagePath = null;
         if ($request->hasFile('court_image')) {
             $file = $request->file('court_image');
-            $filename = 'courts/' . $request->user()->id . '_' . time() . '.' . $file->getClientOriginalExtension();
-            $file->storeAs('public', $filename);
-            $imagePath = $filename;
+            $basename = $request->user()->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            Storage::disk('public')->putFileAs('courts', $file, $basename);
+            $imagePath = 'courts/' . $basename;
         }
 
         $amenities = $request->has('amenities') ? $request->amenities : [];
@@ -145,13 +145,13 @@ class CourtController extends Controller
         }
 
         if ($request->hasFile('court_image')) {
-            if ($court->court_image && Storage::exists('public/' . $court->court_image)) {
-                Storage::delete('public/' . $court->court_image);
+            if ($court->court_image && Storage::disk('public')->exists($court->court_image)) {
+                Storage::disk('public')->delete($court->court_image);
             }
             $file = $request->file('court_image');
-            $filename = 'courts/' . $request->user()->id . '_' . time() . '.' . $file->getClientOriginalExtension();
-            $file->storeAs('public', $filename);
-            $court->court_image = $filename;
+            $basename = $request->user()->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            Storage::disk('public')->putFileAs('courts', $file, $basename);
+            $court->court_image = 'courts/' . $basename;
         }
 
         $court->update($request->only(['name', 'court_type', 'location', 'price_per_hour', 'time_slots', 'is_active', 'close_reason', 'amenities', 'about', 'court_quality', 'has_tent', 'venue_type', 'parking_slots']));
@@ -163,8 +163,8 @@ class CourtController extends Controller
     {
         $court = Court::where('id', $id)->where('user_id', $request->user()->id)->firstOrFail();
 
-        if ($court->court_image && Storage::exists('public/' . $court->court_image)) {
-            Storage::delete('public/' . $court->court_image);
+        if ($court->court_image && Storage::disk('public')->exists($court->court_image)) {
+            Storage::disk('public')->delete($court->court_image);
         }
 
         $court->delete();

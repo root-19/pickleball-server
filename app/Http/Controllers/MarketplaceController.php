@@ -103,17 +103,17 @@ class MarketplaceController extends Controller
         $imagePath = null;
         if ($request->hasFile('image')) {
             $file = $request->file('image');
-            $filename = 'marketplace/' . $request->user()->id . '_' . time() . '.' . $file->getClientOriginalExtension();
-            $file->storeAs('public', $filename);
-            $imagePath = $filename;
+            $basename = $request->user()->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            Storage::disk('public')->putFileAs('marketplace', $file, $basename);
+            $imagePath = 'marketplace/' . $basename;
         }
 
         $videoPath = null;
         if ($request->hasFile('video')) {
             $file = $request->file('video');
-            $filename = 'marketplace/videos/' . $request->user()->id . '_' . time() . '.' . $file->getClientOriginalExtension();
-            $file->storeAs('public', $filename);
-            $videoPath = $filename;
+            $basename = $request->user()->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            Storage::disk('public')->putFileAs('marketplace/videos', $file, $basename);
+            $videoPath = 'marketplace/videos/' . $basename;
         }
 
         $post = MarketplacePost::create([
@@ -148,23 +148,23 @@ class MarketplaceController extends Controller
         }
 
         if ($request->hasFile('image')) {
-            if ($post->image && Storage::exists('public/' . $post->image)) {
-                Storage::delete('public/' . $post->image);
+            if ($post->image && Storage::disk('public')->exists($post->image)) {
+                Storage::disk('public')->delete($post->image);
             }
             $file = $request->file('image');
-            $filename = 'marketplace/' . $request->user()->id . '_' . time() . '.' . $file->getClientOriginalExtension();
-            $file->storeAs('public', $filename);
-            $post->image = $filename;
+            $basename = $request->user()->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            Storage::disk('public')->putFileAs('marketplace', $file, $basename);
+            $post->image = 'marketplace/' . $basename;
         }
 
         if ($request->hasFile('video')) {
-            if ($post->video && Storage::exists('public/' . $post->video)) {
-                Storage::delete('public/' . $post->video);
+            if ($post->video && Storage::disk('public')->exists($post->video)) {
+                Storage::disk('public')->delete($post->video);
             }
             $file = $request->file('video');
-            $filename = 'marketplace/videos/' . $request->user()->id . '_' . time() . '.' . $file->getClientOriginalExtension();
-            $file->storeAs('public', $filename);
-            $post->video = $filename;
+            $basename = $request->user()->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            Storage::disk('public')->putFileAs('marketplace/videos', $file, $basename);
+            $post->video = 'marketplace/videos/' . $basename;
         }
 
         $post->update($request->only(['title', 'description', 'price', 'link']));
@@ -237,11 +237,11 @@ class MarketplaceController extends Controller
     {
         $post = MarketplacePost::where('id', $id)->where('user_id', $request->user()->id)->firstOrFail();
 
-        if ($post->image && Storage::exists('public/' . $post->image)) {
-            Storage::delete('public/' . $post->image);
+        if ($post->image && Storage::disk('public')->exists($post->image)) {
+            Storage::disk('public')->delete($post->image);
         }
-        if ($post->video && Storage::exists('public/' . $post->video)) {
-            Storage::delete('public/' . $post->video);
+        if ($post->video && Storage::disk('public')->exists($post->video)) {
+            Storage::disk('public')->delete($post->video);
         }
 
         $post->delete();

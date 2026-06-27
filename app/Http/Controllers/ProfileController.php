@@ -71,15 +71,15 @@ class ProfileController extends Controller
         $user = $request->user();
 
         // Delete old image if exists
-        if ($user->profile_image && Storage::exists('public/' . $user->profile_image)) {
-            Storage::delete('public/' . $user->profile_image);
+        if ($user->profile_image && Storage::disk('public')->exists($user->profile_image)) {
+            Storage::disk('public')->delete($user->profile_image);
         }
 
         $file = $request->file('profile_image');
-        $filename = 'profiles/' . $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
-        $file->storeAs('public', $filename);
+        $basename = $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+        Storage::disk('public')->putFileAs('profiles', $file, $basename);
 
-        $user->update(['profile_image' => $filename]);
+        $user->update(['profile_image' => 'profiles/' . $basename]);
 
         return response()->json($this->formatUser($user));
     }
