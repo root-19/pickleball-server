@@ -42,6 +42,8 @@ Route::get('/payments/callback/success', [PaymentController::class, 'callbackSuc
 Route::get('/payments/callback/failed',  [PaymentController::class, 'callbackFailed']);
 
 Route::get('/pickle-events/browse', [PickleEventController::class, 'browse']);
+Route::get('/marketplace/reels', [MarketplaceController::class, 'reels']);
+Route::post('/marketplace/{id}/view', [MarketplaceController::class, 'incrementView']);
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
@@ -78,10 +80,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/help-center', [HelpCenterController::class, 'store']);
 
     Route::get('/marketplace', [MarketplaceController::class, 'index']);
-    Route::get('/marketplace/reels', [MarketplaceController::class, 'reels']);
     Route::get('/marketplace/my-posts', [MarketplaceController::class, 'myPosts']);
     Route::post('/marketplace', [MarketplaceController::class, 'store']);
-    Route::post('/marketplace/{id}/view', [MarketplaceController::class, 'incrementView']);
     Route::post('/marketplace/{id}/heart', [MarketplaceController::class, 'toggleHeart']);
     Route::get('/marketplace/{id}/comments', [MarketplaceController::class, 'getComments']);
     Route::post('/marketplace/{id}/comments', [MarketplaceController::class, 'addComment']);
