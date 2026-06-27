@@ -54,10 +54,12 @@ class MarketplaceController extends Controller
     public function incrementView(Request $request, $id)
     {
         $post = MarketplacePost::findOrFail($id);
-        $userId = $request->user()->id;
+        $user = $request->user();
 
-        if (!$post->views()->where('user_id', $userId)->exists()) {
-            $post->views()->attach($userId);
+        if ($user) {
+            if (!$post->views()->where('user_id', $user->id)->exists()) {
+                $post->views()->attach($user->id);
+            }
         }
 
         return response()->json(['ok' => true]);
