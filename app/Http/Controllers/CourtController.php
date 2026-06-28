@@ -36,9 +36,22 @@ class CourtController extends Controller
 
     public function browse(Request $request)
     {
-        $courts = Court::with('owner', 'reviews')
-            ->get()
-            ->map(fn($court) => $this->formatCourt($court));
+        $user = $request->user();
+        
+        if ($user->role === 'owner') {
+            // Owners can only see their own courts
+            $courts = Court::with('owner', 'reviews')
+                ->where('user_id', $user->id)
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(fn($court) => $this->formatCourt($court));
+        } else {
+            // Regular users can see all courts for discovery
+            $courts = Court::with('owner', 'reviews')
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(fn($court) => $this->formatCourt($court));
+        }
 
         return response()->json($courts);
     }
