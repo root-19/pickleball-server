@@ -70,7 +70,7 @@ class CourtController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name'           => 'required|string|max:255',
-            'location'       => 'required|string|max:500',
+            'location'       => 'nullable|string|max:500',
             'price_per_hour' => 'required|numeric|min:0',
             'time_slots'     => 'required|array|min:1',
             'time_slots.*.start' => 'required|string',

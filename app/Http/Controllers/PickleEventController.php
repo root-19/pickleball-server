@@ -41,7 +41,7 @@ class PickleEventController extends Controller
     {
         $request->validate([
             'title'          => 'required|string|max:255',
-            'location'       => 'required|string|max:255',
+            'location'       => 'nullable|string|max:255',
             'event_date'     => 'required|date',
             'open_time'      => 'required|string',
             'close_time'     => 'required|string',
