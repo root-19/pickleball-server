@@ -70,22 +70,13 @@ class CourtController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name'           => 'required|string|max:255',
-            'location'       => 'nullable|string|max:500',
             'price_per_hour' => 'required|numeric|min:0',
-            'time_slots'     => 'required|array|min:1',
-            'time_slots.*.start' => 'required|string',
-            'time_slots.*.end'   => 'required|string',
             'court_image'    => 'nullable|image|mimes:jpeg,png,jpg|max:3072',
-            'latitude'       => 'nullable|numeric|between:-90,90',
-            'longitude'      => 'nullable|numeric|between:-180,180',
-            'court_type'     => 'nullable|in:regular,open_play',
-            'amenities'      => 'nullable|array',
-            'amenities.*'    => 'string',
             'about'          => 'nullable|string|max:1000',
             'court_quality'  => 'nullable|in:standard,pro',
             'has_tent'       => 'nullable|boolean',
             'venue_type'     => 'nullable|in:outdoor,indoor',
-            'parking_slots'  => 'nullable|integer|min:0|max:9999',
+
         ]);
 
         if ($validator->fails()) {
@@ -100,24 +91,16 @@ class CourtController extends Controller
             $imagePath = 'courts/' . $basename;
         }
 
-        $amenities = $request->has('amenities') ? $request->amenities : [];
-
         $court = Court::create([
             'user_id'         => $request->user()->id,
             'name'            => $request->name,
             'court_type'      => $request->court_type ?? 'regular',
-            'location'        => $request->location,
             'price_per_hour'  => $request->price_per_hour,
-            'time_slots'      => $request->time_slots,
             'court_image'     => $imagePath,
-            'latitude'        => $request->latitude,
-            'longitude'       => $request->longitude,
-            'amenities'       => $amenities,
             'about'           => $request->about,
             'court_quality'   => $request->court_quality,
             'has_tent'        => $request->has_tent ?? false,
             'venue_type'      => $request->venue_type,
-            'parking_slots'   => $request->parking_slots,
         ]);
 
         return response()->json($this->formatCourt($court), 201);
@@ -135,22 +118,15 @@ class CourtController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name'           => 'sometimes|string|max:255',
-            'location'       => 'sometimes|string|max:500',
             'price_per_hour' => 'sometimes|numeric|min:0',
-            'time_slots'     => 'sometimes|array|min:1',
-            'time_slots.*.start' => 'required_with:time_slots|string',
-            'time_slots.*.end'   => 'required_with:time_slots|string',
             'is_active'      => 'sometimes|boolean',
             'close_reason'   => 'nullable|string|max:500',
             'court_image'    => 'nullable|image|mimes:jpeg,png,jpg|max:3072',
             'court_type'     => 'nullable|in:regular,open_play',
-            'amenities'      => 'nullable|array',
-            'amenities.*'    => 'string',
             'about'          => 'nullable|string|max:1000',
             'court_quality'  => 'nullable|in:standard,pro',
             'has_tent'       => 'nullable|boolean',
             'venue_type'     => 'nullable|in:outdoor,indoor',
-            'parking_slots'  => 'nullable|integer|min:0|max:9999',
         ]);
 
         if ($validator->fails()) {
@@ -167,7 +143,7 @@ class CourtController extends Controller
             $court->court_image = 'courts/' . $basename;
         }
 
-        $court->update($request->only(['name', 'court_type', 'location', 'price_per_hour', 'time_slots', 'is_active', 'close_reason', 'amenities', 'about', 'court_quality', 'has_tent', 'venue_type', 'parking_slots']));
+        $court->update($request->only(['name', 'court_type', 'price_per_hour', 'is_active', 'close_reason', 'about', 'court_quality', 'has_tent', 'venue_type']));
 
         return response()->json($this->formatCourt($court));
     }
