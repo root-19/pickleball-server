@@ -28,13 +28,26 @@ class MarketplaceController extends Controller
         return $data;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $posts = MarketplacePost::with('owner')
-            ->where('is_active', true)
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(fn($p) => $this->formatPost($p));
+        $user = $request->user();
+        
+        if ($user && $user->role === 'owner') {
+            // Owners can only see their own marketplace posts
+            $posts = MarketplacePost::with('owner')
+                ->where('user_id', $user->id)
+                ->where('is_active', true)
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(fn($p) => $this->formatPost($p));
+        } else {
+            // Regular users can see all marketplace posts
+            $posts = MarketplacePost::with('owner')
+                ->where('is_active', true)
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(fn($p) => $this->formatPost($p));
+        }
 
         return response()->json($posts);
     }
