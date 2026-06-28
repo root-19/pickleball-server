@@ -30,6 +30,10 @@ class User extends Authenticatable
         'profile_image',
         'company_name',
         'company_location',
+        'parking_slots',
+        'opening_time',
+        'closing_time',
+        'amenities',
     ];
 
     /**

@@ -31,6 +31,11 @@ class AuthController extends Controller
             'role'             => 'sometimes|in:admin,owner,user',
             'company_name'     => 'nullable|string|max:255',
             'company_location' => 'nullable|string|max:500',
+            'parking_slots'    => 'nullable|string|max:10',
+            'opening_time'     => 'nullable|string|max:20',
+            'closing_time'     => 'nullable|string|max:20',
+            'amenities'        => 'nullable|array',
+            'amenities.*'      => 'string|max:50',
         ]);
 
         if ($validator->fails()) {
@@ -44,6 +49,10 @@ class AuthController extends Controller
             'role'             => $request->role ?? User::ROLE_USER,
             'company_name'     => $request->company_name,
             'company_location' => $request->company_location,
+            'parking_slots'    => $request->parking_slots,
+            'opening_time'     => $request->opening_time,
+            'closing_time'     => $request->closing_time,
+            'amenities'        => $request->amenities ? json_encode($request->amenities) : null,
         ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;
