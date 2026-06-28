@@ -148,4 +148,17 @@ class AuthController extends Controller
 
         return response()->json(['message' => 'Password reset successfully'], 200);
     }
+
+    public function logout(Request $request)
+    {
+        $user = $request->user();
+        
+        // Delete all tokens for the user
+        $user->tokens()->delete();
+        
+        // Clear user cache
+        Cache::forget('user:' . $user->id);
+        
+        return response()->json(['message' => 'Logged out successfully'], 200);
+    }
 }
