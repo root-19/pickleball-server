@@ -22,6 +22,10 @@ class CourtController extends Controller
             $data['owner_profile_image']    = $court->owner->profile_image
                 ? url('storage/' . $court->owner->profile_image)
                 : null;
+            $data['owner_parking_slots']    = $court->owner->parking_slots;
+            $data['owner_opening_time']     = $court->owner->opening_time;
+            $data['owner_closing_time']     = $court->owner->closing_time;
+            $data['owner_amenities']        = $court->owner->amenities;
         }
 
         // Calculate real-time rating data
