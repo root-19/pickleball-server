@@ -392,6 +392,7 @@ class EventQueueController extends Controller
                         'currency'               => 'PHP',
                         'payment_method_allowed' => ['qrph'],
                         'description'            => "Event Slot - {$event->title}",
+                        'expires_at'             => Carbon::now()->addMinutes(5)->toIso8601String(),
                     ],
                 ],
             ]);
@@ -444,7 +445,7 @@ class EventQueueController extends Controller
             'client_key'   => $clientKey,
             'queue_id'     => $queue->id,
             'amount'       => $event->price_per_head,
-            'expires_in'   => 1800,
+            'expires_in'   => 300,
         ]);
     }
 

@@ -359,6 +359,7 @@ class PaymentController extends Controller
                         'currency'               => 'PHP',
                         'payment_method_allowed' => ['qrph'],
                         'description'            => "Pickaball - {$court->name} - {$bookingCode}",
+                        'expires_at'             => Carbon::now()->addMinutes(5)->toIso8601String(),
                     ],
                 ],
             ]);
@@ -432,7 +433,7 @@ class PaymentController extends Controller
             'client_key'      => $clientKey,
             'booking_temp_id' => (string) $booking->id,
             'amount'          => $totalPrice,
-            'expires_in'      => 1800,
+            'expires_in'      => 300,
         ]);
     }
 
