@@ -44,13 +44,20 @@ class ProfileController extends Controller
             'bio' => 'nullable|string|max:1000',
             'company_name' => 'nullable|string|max:255',
             'company_location' => 'nullable|string|max:500',
+            'parking_slots' => 'nullable|string|max:10',
+            'opening_time' => 'nullable|string|max:20',
+            'closing_time' => 'nullable|string|max:20',
+            'amenities' => 'nullable|array',
+            'amenities.*' => 'string',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $user->update($request->only(['name', 'email', 'phone', 'bio', 'company_name', 'company_location']));
+        $amenitiesData = $request->has('amenities') ? json_encode($request->amenities) : null;
+
+        $user->update($request->only(['name', 'email', 'phone', 'bio', 'company_name', 'company_location', 'parking_slots', 'opening_time', 'closing_time']) + ['amenities' => $amenitiesData]);
 
         return response()->json($this->formatUser($user));
     }

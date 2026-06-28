@@ -94,6 +94,7 @@ class CourtController extends Controller
         $court = Court::create([
             'user_id'         => $request->user()->id,
             'name'            => $request->name,
+            'location'        => $request->user()->company_location,
             'court_type'      => $request->court_type ?? 'regular',
             'price_per_hour'  => $request->price_per_hour,
             'court_image'     => $imagePath,
