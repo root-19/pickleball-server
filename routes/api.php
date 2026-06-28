@@ -55,7 +55,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/profile/image', [ProfileController::class, 'uploadImage']);
     Route::get('/profile/stats', [ProfileController::class, 'stats']);
 
-    Route::get('/courts/browse', [CourtController::class, 'browse'])->withoutMiddleware(['auth:sanctum']);
+    Route::get('/courts/browse', [CourtController::class, 'browse']);
     Route::get('/courts/{id}/booked-slots', [BookingController::class, 'getCourtBookedSlots'])->withoutMiddleware(['auth:sanctum']);
     Route::apiResource('/courts', CourtController::class);
     Route::get('/owner/calendar', [CalendarController::class, 'ownerWeek']);
