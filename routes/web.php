@@ -18,6 +18,7 @@ Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
     Route::get('/users',              [AdminController::class, 'users'])->name('users');
     Route::get('/users/{id}',         [AdminController::class, 'showUser'])->name('users.show');
     Route::delete('/users/{id}',      [AdminController::class, 'destroyUser'])->name('users.destroy');
+    Route::get('/verifications',                   [AdminController::class, 'verifications'])->name('verifications');
     Route::get('/owners',                          [AdminController::class, 'owners'])->name('owners');
     Route::get('/owners/{id}',                     [AdminController::class, 'showOwner'])->name('owners.show');
     Route::post('/owners/{id}/verification',       [AdminController::class, 'updateVerification'])->name('owners.verification');

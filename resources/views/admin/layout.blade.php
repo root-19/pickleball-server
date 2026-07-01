@@ -70,6 +70,9 @@
             <a href="{{ route('admin.owners') }}" class="nav-link {{ request()->routeIs('admin.owners*') ? 'active' : '' }}">
                 <i class="fas fa-store w-4"></i> Court Owners
             </a>
+            <a href="{{ route('admin.verifications') }}" class="nav-link {{ request()->routeIs('admin.verifications*') ? 'active' : '' }}">
+                <i class="fas fa-shield-halved w-4"></i> Verifications
+            </a>
             <a href="{{ route('admin.payouts') }}" class="nav-link {{ request()->routeIs('admin.payouts*') ? 'active' : '' }}">
                 <i class="fas fa-money-bill-transfer w-4"></i> Payouts
             </a>

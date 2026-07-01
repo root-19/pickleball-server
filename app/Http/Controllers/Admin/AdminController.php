@@ -231,6 +231,34 @@ class AdminController extends Controller
     }
 
     /**
+     * List all submitted verification accounts for review.
+     */
+    public function verifications(Request $request)
+    {
+        $status = $request->query('status');
+
+        $query = VerificationAccount::with('user');
+        if (in_array($status, ['pending', 'approved', 'rejected'], true)) {
+            $query->where('status', $status);
+        }
+
+        $verifications = $query
+            ->orderByRaw("FIELD(status,'pending','rejected','approved')")
+            ->latest('updated_at')
+            ->paginate(10)
+            ->withQueryString();
+
+        $counts = [
+            'all'      => VerificationAccount::count(),
+            'pending'  => VerificationAccount::where('status', 'pending')->count(),
+            'approved' => VerificationAccount::where('status', 'approved')->count(),
+            'rejected' => VerificationAccount::where('status', 'rejected')->count(),
+        ];
+
+        return view('admin.verifications', compact('verifications', 'counts', 'status'));
+    }
+
+    /**
      * Approve or reject an owner's verification account.
      */
     public function updateVerification(Request $request, $id)
