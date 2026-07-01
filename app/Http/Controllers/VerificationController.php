@@ -20,6 +20,10 @@ class VerificationController extends Controller
                 $data[$field] = url('storage/' . $verification->{$field});
             }
         }
+        $data['documents'] = array_map(fn($path) => [
+            'name' => basename($path),
+            'url'  => url('storage/' . $path),
+        ], $verification->documents ?? []);
         return $data;
     }
 
@@ -45,6 +49,7 @@ class VerificationController extends Controller
                 'instagram'     => null,
                 'tiktok'        => null,
                 'website'       => null,
+                'documents'     => [],
                 'status'        => 'not_submitted',
             ]);
         }
@@ -69,6 +74,10 @@ class VerificationController extends Controller
             'instagram'     => 'nullable|string|max:500',
             'tiktok'        => 'nullable|string|max:500',
             'website'       => 'nullable|string|max:500',
+            'documents'            => 'nullable|array',
+            'documents.*'          => 'file|mimes:pdf,jpeg,png,jpg,doc,docx|max:5120',
+            'existing_documents'   => 'nullable|array',
+            'existing_documents.*' => 'string',
         ]);
 
         if ($validator->fails()) {
@@ -92,6 +101,31 @@ class VerificationController extends Controller
                 $verification->{$field} = 'verifications/' . $basename;
             }
         }
+
+        // Documents (optional): keep the existing ones the client still wants,
+        // delete the removed ones, then append newly uploaded files.
+        $currentDocs = $verification->documents ?? [];
+        $prefix = url('storage') . '/';
+        $kept = [];
+        foreach ((array) $request->input('existing_documents', []) as $entry) {
+            $relative = str_starts_with($entry, $prefix) ? substr($entry, strlen($prefix)) : $entry;
+            if (in_array($relative, $currentDocs, true)) {
+                $kept[] = $relative;
+            }
+        }
+        foreach ($currentDocs as $path) {
+            if (!in_array($path, $kept, true) && Storage::disk('public')->exists($path)) {
+                Storage::disk('public')->delete($path);
+            }
+        }
+        if ($request->hasFile('documents')) {
+            foreach ($request->file('documents') as $i => $file) {
+                $basename = $user->id . '_doc_' . time() . '_' . $i . '.' . $file->getClientOriginalExtension();
+                Storage::disk('public')->putFileAs('verifications', $file, $basename);
+                $kept[] = 'verifications/' . $basename;
+            }
+        }
+        $verification->documents = $kept;
 
         $verification->facebook  = $request->input('facebook');
         $verification->instagram = $request->input('instagram');

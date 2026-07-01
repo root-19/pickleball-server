@@ -20,7 +20,12 @@ class VerificationAccount extends Model
         'instagram',
         'tiktok',
         'website',
+        'documents',
         'status',
+    ];
+
+    protected $casts = [
+        'documents' => 'array',
     ];
 
     public function user()
