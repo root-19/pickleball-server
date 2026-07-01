@@ -62,7 +62,7 @@ class PickleEventController extends Controller
         $event = PickleEvent::create([
             'user_id'        => $request->user()->id,
             'title'          => $request->title,
-            'location'       => $request->location,
+            'location'       => $request->location ?: $request->user()->company_location,
             'event_date'     => $request->event_date,
             'open_time'      => $request->open_time,
             'close_time'     => $request->close_time,
