@@ -212,6 +212,17 @@ class BookingController extends Controller
             ->where('status', '!=', 'cancelled')
             ->sum('total_price');
 
+        // Month totals (for the Day/Week/Month range selector)
+        $monthAnchor = $request->query('month')
+            ? \Carbon\Carbon::parse($request->query('month') . '-01')
+            : $weekStart->copy();
+        $monthStart = $monthAnchor->copy()->startOfMonth();
+        $monthEnd   = $monthAnchor->copy()->endOfMonth();
+        $monthBookings = Booking::whereIn('court_id', $courtIds)
+            ->whereBetween('booking_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+            ->where('status', '!=', 'cancelled')
+            ->get();
+
         return response()->json([
             'week_start'        => $weekStart->toDateString(),
             'week_end'          => $weekEnd->toDateString(),
@@ -222,6 +233,11 @@ class BookingController extends Controller
             'platform_fee_pct'  => self::PLATFORM_FEE * 100,
             'daily'             => $daily,
             'top_courts'        => $topCourts,
+            'month_start'       => $monthStart->toDateString(),
+            'month_label'       => $monthStart->format('F Y'),
+            'month_revenue'     => $net($monthBookings->sum('total_price')),
+            'month_bookings'    => $monthBookings->count(),
+            'month_hours'       => (float) $monthBookings->sum('duration_hours'),
         ]);
     }
 
