@@ -11,11 +11,14 @@ use App\Models\Payout;
 use App\Models\PayoutAccount;
 use App\Models\User;
 use App\Models\VerificationAccount;
+use App\Mail\VerificationStatusMail;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class AdminController extends Controller
@@ -276,7 +279,17 @@ class AdminController extends Controller
 
         $verification->update(['status' => $request->status]);
 
-        return back()->with('success', 'Verification ' . $request->status . '.');
+        // Notify the owner by email for approved/rejected decisions.
+        if (in_array($request->status, ['approved', 'rejected'], true) && $owner->email) {
+            try {
+                Mail::to($owner->email)->send(new VerificationStatusMail($owner, $request->status));
+            } catch (\Throwable $e) {
+                Log::error('Verification email failed: ' . $e->getMessage());
+                return back()->with('success', 'Verification ' . $request->status . ', but the email notification could not be sent.');
+            }
+        }
+
+        return back()->with('success', 'Verification ' . $request->status . ' and the owner was notified by email.');
     }
 
     // ── Payouts ───────────────────────────────────────────────────────────
