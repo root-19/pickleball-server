@@ -20,6 +20,7 @@ Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
     Route::delete('/users/{id}',      [AdminController::class, 'destroyUser'])->name('users.destroy');
     Route::get('/owners',                          [AdminController::class, 'owners'])->name('owners');
     Route::get('/owners/{id}',                     [AdminController::class, 'showOwner'])->name('owners.show');
+    Route::post('/owners/{id}/verification',       [AdminController::class, 'updateVerification'])->name('owners.verification');
     Route::get('/owners/{id}/payout',              [AdminController::class, 'createPayout'])->name('payouts.create');
     Route::post('/owners/{id}/payout',             [AdminController::class, 'storePayout'])->name('payouts.store');
     Route::get('/payouts',                         [AdminController::class, 'payouts'])->name('payouts');

@@ -10,6 +10,7 @@ use App\Models\Message;
 use App\Models\Payout;
 use App\Models\PayoutAccount;
 use App\Models\User;
+use App\Models\VerificationAccount;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -195,9 +196,10 @@ class AdminController extends Controller
 
     public function showOwner($id)
     {
-        $owner    = User::where('role', 'owner')->findOrFail($id);
-        $courts   = Court::where('user_id', $id)->get();
-        $courtIds = $courts->pluck('id');
+        $owner        = User::where('role', 'owner')->findOrFail($id);
+        $verification = VerificationAccount::where('user_id', $id)->first();
+        $courts       = Court::where('user_id', $id)->get();
+        $courtIds     = $courts->pluck('id');
 
         $fee       = self::PLATFORM_FEE;
         $bookings  = Booking::with('court')
@@ -224,8 +226,29 @@ class AdminController extends Controller
         });
 
         return view('admin.owner-detail', compact(
-            'owner', 'courts', 'bookings', 'gross', 'net', 'platform', 'earningsChart'
+            'owner', 'verification', 'courts', 'bookings', 'gross', 'net', 'platform', 'earningsChart'
         ));
+    }
+
+    /**
+     * Approve or reject an owner's verification account.
+     */
+    public function updateVerification(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|in:approved,rejected,pending',
+        ]);
+
+        $owner = User::where('role', 'owner')->findOrFail($id);
+        $verification = VerificationAccount::where('user_id', $owner->id)->first();
+
+        if (!$verification) {
+            return back()->with('error', 'This owner has not submitted verification info yet.');
+        }
+
+        $verification->update(['status' => $request->status]);
+
+        return back()->with('success', 'Verification ' . $request->status . '.');
     }
 
     // ── Payouts ───────────────────────────────────────────────────────────

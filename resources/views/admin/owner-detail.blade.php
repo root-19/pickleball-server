@@ -29,6 +29,106 @@
     </a>
 </div>
 
+{{-- Verification --}}
+@php
+    $vStatus = $verification->status ?? 'not_submitted';
+    $vBadge = [
+        'approved'      => 'bg-green-500/20 text-green-400',
+        'pending'       => 'bg-yellow-500/20 text-yellow-400',
+        'rejected'      => 'bg-red-500/20 text-red-400',
+        'not_submitted' => 'bg-slate-500/20 text-slate-400',
+    ][$vStatus] ?? 'bg-slate-500/20 text-slate-400';
+    $vLabel = [
+        'approved'      => 'Verified',
+        'pending'       => 'Pending Review',
+        'rejected'      => 'Rejected',
+        'not_submitted' => 'Not Submitted',
+    ][$vStatus] ?? ucfirst($vStatus);
+@endphp
+<div class="card mb-8">
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="font-bold text-white"><i class="fas fa-shield-halved mr-2 text-purple-400"></i>Account Verification</h2>
+        <span class="badge {{ $vBadge }}">{{ $vLabel }}</span>
+    </div>
+
+    @if(session('success'))
+        <div class="mb-4 px-4 py-2 rounded-lg bg-green-500/15 text-green-400 text-sm">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+        <div class="mb-4 px-4 py-2 rounded-lg bg-red-500/15 text-red-400 text-sm">{{ session('error') }}</div>
+    @endif
+
+    @if(!$verification)
+        <p class="text-slate-500 text-sm">This owner has not submitted any verification info yet.</p>
+    @else
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div>
+                <p class="text-slate-400 text-xs mb-1">Registered Email</p>
+                <p class="text-white text-sm mb-4">{{ $verification->email }}</p>
+
+                <p class="text-slate-400 text-xs mb-2">Social Media</p>
+                <ul class="text-sm text-slate-300 space-y-1 mb-4">
+                    <li><i class="fab fa-facebook w-5 text-slate-500"></i> {{ $verification->facebook ?: '—' }}</li>
+                    <li><i class="fab fa-instagram w-5 text-slate-500"></i> {{ $verification->instagram ?: '—' }}</li>
+                    <li><i class="fab fa-tiktok w-5 text-slate-500"></i> {{ $verification->tiktok ?: '—' }}</li>
+                    <li><i class="fas fa-globe w-5 text-slate-500"></i> {{ $verification->website ?: '—' }}</li>
+                </ul>
+
+                <p class="text-slate-400 text-xs mb-2">Documents</p>
+                @if(!empty($verification->documents))
+                    <ul class="text-sm space-y-1">
+                        @foreach($verification->documents as $doc)
+                            <li><a href="{{ url('storage/'.$doc) }}" target="_blank" class="text-blue-400 hover:underline">
+                                <i class="fas fa-file mr-1"></i>{{ basename($doc) }}</a></li>
+                        @endforeach
+                    </ul>
+                @else
+                    <p class="text-slate-500 text-sm">No documents uploaded.</p>
+                @endif
+            </div>
+
+            <div>
+                <p class="text-slate-400 text-xs mb-2">Valid ID</p>
+                @if($verification->id_image)
+                    <a href="{{ url('storage/'.$verification->id_image) }}" target="_blank">
+                        <img src="{{ url('storage/'.$verification->id_image) }}" class="w-full max-w-xs rounded-lg border border-slate-700 mb-4">
+                    </a>
+                @else
+                    <p class="text-slate-500 text-sm mb-4">No ID uploaded.</p>
+                @endif
+
+                <p class="text-slate-400 text-xs mb-2">Court Photos</p>
+                <div class="flex flex-wrap gap-2">
+                    @foreach(['court_image_1','court_image_2','court_image_3'] as $ci)
+                        @if($verification->{$ci})
+                            <a href="{{ url('storage/'.$verification->{$ci}) }}" target="_blank">
+                                <img src="{{ url('storage/'.$verification->{$ci}) }}" class="w-24 h-24 object-cover rounded-lg border border-slate-700">
+                            </a>
+                        @endif
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
+        <div class="flex gap-3 mt-6 pt-6 border-t border-slate-700">
+            <form method="POST" action="{{ route('admin.owners.verification', $owner->id) }}">
+                @csrf
+                <input type="hidden" name="status" value="approved">
+                <button type="submit" class="px-5 py-2.5 rounded-xl bg-green-500 hover:bg-green-600 text-white font-bold transition">
+                    <i class="fas fa-check mr-1"></i> Approve
+                </button>
+            </form>
+            <form method="POST" action="{{ route('admin.owners.verification', $owner->id) }}">
+                @csrf
+                <input type="hidden" name="status" value="rejected">
+                <button type="submit" class="px-5 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold transition">
+                    <i class="fas fa-xmark mr-1"></i> Reject
+                </button>
+            </form>
+        </div>
+    @endif
+</div>
+
 {{-- Summary Stats --}}
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
     <div class="stat-card">
