@@ -19,6 +19,7 @@ use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\EventQueueController;
 use App\Http\Controllers\PickleEventController;
 use App\Http\Controllers\StaffController;
+use App\Http\Controllers\VerificationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -55,6 +56,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/profile', [ProfileController::class, 'update']);
     Route::post('/profile/image', [ProfileController::class, 'uploadImage']);
     Route::get('/profile/stats', [ProfileController::class, 'stats']);
+
+    Route::get('/verification', [VerificationController::class, 'show']);
+    Route::post('/verification', [VerificationController::class, 'store']);
 
     Route::get('/courts/browse', [CourtController::class, 'browse']);
     Route::get('/courts/{id}/booked-slots', [BookingController::class, 'getCourtBookedSlots'])->withoutMiddleware(['auth:sanctum']);
