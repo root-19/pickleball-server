@@ -15,7 +15,7 @@ class VerificationController extends Controller
     private function format(VerificationAccount $verification)
     {
         $data = $verification->toArray();
-        foreach (['court_image_1', 'court_image_2', 'court_image_3'] as $field) {
+        foreach (['id_image', 'court_image_1', 'court_image_2', 'court_image_3'] as $field) {
             if ($verification->{$field}) {
                 $data[$field] = url('storage/' . $verification->{$field});
             }
@@ -37,6 +37,7 @@ class VerificationController extends Controller
             return response()->json([
                 'user_id'       => $user->id,
                 'email'         => $user->email,
+                'id_image'      => null,
                 'court_image_1' => null,
                 'court_image_2' => null,
                 'court_image_3' => null,
@@ -60,6 +61,7 @@ class VerificationController extends Controller
         $user = $request->user();
 
         $validator = Validator::make($request->all(), [
+            'id_image'      => 'nullable|image|mimes:jpeg,png,jpg|max:3072',
             'court_image_1' => 'nullable|image|mimes:jpeg,png,jpg|max:3072',
             'court_image_2' => 'nullable|image|mimes:jpeg,png,jpg|max:3072',
             'court_image_3' => 'nullable|image|mimes:jpeg,png,jpg|max:3072',
@@ -78,7 +80,7 @@ class VerificationController extends Controller
         // Email is always taken from the registered account, not the request.
         $verification->email = $user->email;
 
-        foreach (['court_image_1', 'court_image_2', 'court_image_3'] as $field) {
+        foreach (['id_image', 'court_image_1', 'court_image_2', 'court_image_3'] as $field) {
             if ($request->hasFile($field)) {
                 // Remove the previously uploaded image for this slot.
                 if ($verification->{$field} && Storage::disk('public')->exists($verification->{$field})) {

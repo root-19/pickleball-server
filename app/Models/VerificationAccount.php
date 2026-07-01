@@ -12,6 +12,7 @@ class VerificationAccount extends Model
     protected $fillable = [
         'user_id',
         'email',
+        'id_image',
         'court_image_1',
         'court_image_2',
         'court_image_3',
